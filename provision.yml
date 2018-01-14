@@ -1,0 +1,7 @@
+---
+# Provisioner for Vagrant
+- name: Provisioner playbook
+  hosts: all
+  # remote_user: vagrant
+  become: yes
+  #  roles:
