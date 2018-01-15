@@ -1,0 +1,12 @@
+---
+#Variables
+
+#ansible managed hostname
+server_hostname: claw.linuxhomeserver.org
+
+#services enabled on firwalld
+firewalld_services:
+#  - foo
+  - http
+  - https
+#  - mysql

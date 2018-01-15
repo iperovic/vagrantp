@@ -1,0 +1,35 @@
+#setup repos
+# epel
+- name: Install EPEL repo
+  yum: name=epel-release state=present
+
+#firewall
+- name: Install Firewalld
+  yum: name=firewalld state=present
+
+- name: Start firewalld service
+  service: name=firewalld state=started enabled=yes
+
+- name: Firewalld rules - enable services
+  firewalld: service={{ item }} permanent=true state=enabled
+  with_items: "{{ firewalld_services }}"
+  notify: Reload firewalld service
+
+#ntp
+# chrony is installed and configured by default
+
+#set hostname
+- name: Set hostname
+  hostname: name={{ server_hostname }}
+
+#other tools
+- name: Install extra tools
+  yum: name={{ item }} state=installed
+  with_items:
+   - setroubleshoot-server
+   - lsof
+   - nmap-ncat
+
+#SELinux
+# enforcing by default, cheers Dan :-)
+# https://stopdisablingselinux.com/
