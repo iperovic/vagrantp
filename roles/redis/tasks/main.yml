@@ -1,0 +1,14 @@
+---
+# This role installs Redis and configures it.
+
+- name: Download and install Redis
+  yum: name=redis state=present
+
+# - name: Configure Redis
+#   template: src=redis.cfg.j2 dest=/etc/....cfg
+#   notify: restart redis
+
+- name: Start the Redis service
+  service: name=redis state=started enabled=yes
+
+#? sentinel

@@ -10,3 +10,6 @@ firewalld_services:
   - http
   - https
 #  - mysql
+
+#2DO - put in vault
+mysql_root_pass: Passw0rd

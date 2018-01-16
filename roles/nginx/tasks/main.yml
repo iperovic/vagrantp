@@ -1,4 +1,6 @@
 ---
+# This role installs Nginx and configures it.
+
 - name: Install nginx package
   yum: name=nginx state=present
 

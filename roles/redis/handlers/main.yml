@@ -1,0 +1,9 @@
+---
+# Handlers for Redis
+
+#restart service
+- name: restart redis
+  service: name=redis state=restarted
+
+# - name: reload redis
+#   service: name=redis state=reloaded

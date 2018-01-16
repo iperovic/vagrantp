@@ -1,3 +1,29 @@
 ---
+# Handlers for MariaDB
+
+#restart service
 - name: restart mariadb
   service: name=mariadb state=restarted
+
+#queries copied from /bin/mysql_secure_installation
+- name: Set MariaDB root password
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+  - UPDATE mysql.user SET Password=PASSWORD('Passw0rd') WHERE User='root';
+  - FLUSH PRIVILEGES;
+  listen: mysql_secure_installation
+- name: Create temporary option file
+  template: src=sec.my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0600
+  listen: mysql_secure_installation
+- name: Recommended security settings
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+  - DELETE FROM mysql.user WHERE User='';
+  - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+  - DROP DATABASE IF EXISTS test;
+  - DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%'
+  - FLUSH PRIVILEGES;
+  listen: mysql_secure_installation
+- name: Remove temporary option file
+  file: path=/root/my.cnf state=absent
+  listen: mysql_secure_installation

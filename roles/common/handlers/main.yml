@@ -1,4 +1,5 @@
 ---
+# Common handlers
 #Reload firewalld
 - name: Reload firewalld service
   service: name=firewalld state=reloaded
