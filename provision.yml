@@ -4,4 +4,10 @@
   hosts: all
   # remote_user: vagrant
   become: yes
-  #  roles:
+  roles:
+    - common
+    - haproxy
+    - nginx
+    - php-fpm
+    - redis
+    - mariadb
