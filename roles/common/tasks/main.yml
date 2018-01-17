@@ -21,6 +21,10 @@
 #ntp
 # chrony is installed and configured by default
 
+#timezone 
+- name: set timezone
+  timezone: name={{ timezone }}
+
 #set hostname
 - name: Set hostname
   hostname: name={{ server_hostname }}

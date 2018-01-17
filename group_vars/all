@@ -13,3 +13,6 @@ firewalld_services:
 
 #2DO - put in vault
 mysql_root_pass: Passw0rd
+
+#timezone:
+timezone: Europe/Zagreb
