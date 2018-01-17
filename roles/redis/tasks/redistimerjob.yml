@@ -1,0 +1,13 @@
+---
+#Add timer job that loads some dummy data into Redis every 5 minutes
+- name: Add timer unit
+  copy: src=redisrw.timer dest=/etc/systemd/system/redisrw.timer mode=644 setype=systemd_unit_file_t
+
+- name: Add service unit
+  copy: src=redisrw.service dest=/etc/systemd/system/redisrw.service mode=644 setype=systemd_unit_file_t
+
+- name: Add script
+  copy: src=redisrw.sh dest=/usr/local/bin/redisrw.sh mode=750
+
+- name: Start & enable the timer service
+  service: name=redisrw.timer state=started enabled=yes

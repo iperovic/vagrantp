@@ -8,5 +8,13 @@
 #   template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg
 #   notify: restart haproxy
 
+#selinux:
+#setsebool -P haproxy_connect_any 1
+#or
+#semanage port -a -t PORT_TYPE -p tcp 5002
+#where PORT_TYPE is one of the following: http_cache_port_t, http_port_t
+#for default config
+
+
 - name: Start the haproxy service
   service: name=haproxy state=started enabled=yes

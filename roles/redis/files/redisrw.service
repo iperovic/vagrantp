@@ -1,0 +1,6 @@
+[Unit]
+Description=Load some dummy data into Redis
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/redisrw.sh

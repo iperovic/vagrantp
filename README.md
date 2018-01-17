@@ -31,7 +31,7 @@ Create a repository on BitBucket or GitHub with the following:
 
 #### Solution
 
-Before using this solution, you should have vagrant with a working provider installed. Visit https://www.vagrantup.com/intro/getting-started/index.html for more info.
+Before using this solution, you should have vagrant with a working provider installed. Visit https://www.vagrantup.com/intro/getting-started/index.html for more info. A working Internet connection is also required.
 
 This solution was developed on bare metal host using Fedora 26 Workstation with qemu-kvm and libvirt.
 Ansible provisioner is written for CentOS 7 with packages from Base and EPEL repositories.

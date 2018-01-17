@@ -4,6 +4,7 @@
 - name: Download and install Redis
   yum: name=redis state=present
 
+# We're using default configuration
 # - name: Configure Redis
 #   template: src=redis.cfg.j2 dest=/etc/....cfg
 #   notify: restart redis
@@ -11,4 +12,5 @@
 - name: Start the Redis service
   service: name=redis state=started enabled=yes
 
-#? sentinel
+#Load some dummy data into Redis every 5 minutes
+- import_tasks: redistimerjob.yml
