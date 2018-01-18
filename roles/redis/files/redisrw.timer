@@ -1,8 +1,10 @@
 [Unit]
 Description=Load some dummy data into Redis every 5 minutes
 Wants=redis.service
+After=redis.service
 
 [Timer]
+OnActiveSec=10
 OnUnitActiveSec=300
 
 [Install]
