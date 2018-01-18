@@ -6,8 +6,7 @@ server_hostname: claw.linuxhomeserver.org
 
 #services enabled on firwalld
 firewalld_services:
-#  - foo
-  - http
+#  - http
   - https
 #  - mysql
 
