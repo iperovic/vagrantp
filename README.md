@@ -31,13 +31,22 @@ Create a repository on BitBucket or GitHub with the following:
 
 #### Solution
 
-Before using this solution, you should have vagrant with a working provider installed. Visit https://www.vagrantup.com/intro/getting-started/index.html for more info. A working Internet connection is also required.
+Before using this solution, you should have vagrant with a working provider installed. Visit [Getting Started](https://www.vagrantup.com/intro/getting-started/index.html) in Vagrant documentation for more info. A working Internet connection is also required.
 
 This solution was developed on bare metal host using Fedora 26 Workstation with qemu-kvm and libvirt.
-Ansible provisioner is written for CentOS 7 with packages from Base and EPEL repositories.
+Ansible provisioner is written for CentOS 7 with packages from Base and EPEL repositories. Provisioner is based on [Ansible best practices repository](https://github.com/ansible/ansible-examples).
 
 Usage:
-```
+```shell
 $ vagrant init cnetos/7
 $ vagrant up
 ```
+
+Additional comments
+- HAProxy
+- nginx
+- php-fpm
+- Redis  
+  Redis is installed with default configuration. Timer job is written purely in bash due to ambiguity of the assignment. And just for kicks.
+- MySQL  
+  No databases or users are created. Only minimal security setup equivalent to running mysql_secure_installation. Root password is set from variable defined in group_vars. MariaDB is replacement for Oracle's MySQL on RHEL/CentOS.
