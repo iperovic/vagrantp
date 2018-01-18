@@ -6,8 +6,8 @@
   become: yes
   roles:
     - common
-    - haproxy
-    - nginx
     - php-fpm
+    - nginx
+    - haproxy
     - redis
     - mariadb
