@@ -19,13 +19,11 @@
     - php-pear
     # - php-mcrypt
 
-# - name: Disable default pool
-#   command: mv /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.disabled creates=/etc/php-fpm.d/www.disabled
-#   notify: restart php-fpm
-
-# - name: Copy php-fpm configuration
-#   template: src=foo.conf dest=/etc/php-fpm.d/
-#   notify: restart php-fpm
+- name: Add php-fpm configuration
+  copy: src=www.conf dest=/etc/php-fpm.d/www.conf mode=644
+#-rw-r--r--. root root system_u:object_r:etc_t:s0       php-fpm.d/www.conf
+# setype=foo_t
+  notify: restart php-fpm
 
 
 #start & enable service
