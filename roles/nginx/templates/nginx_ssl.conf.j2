@@ -1,0 +1,119 @@
+# For more information on configuration, see:
+#   * Official English Documentation: http://nginx.org/en/docs/
+#   * Official Russian Documentation: http://nginx.org/ru/docs/
+
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+
+    server {
+      listen 80 default_server;
+      listen [::]:80 default_server;
+
+      # Redirect all HTTP requests to HTTPS with a 301 Moved Permanently response.
+      return 301 https://$host$request_uri;
+    }
+
+# Settings for a TLS enabled server.
+#Based on:
+#nginx 1.10.3 | intermediate profile | OpenSSL 1.0.2k
+#https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=nginx-1.10.3&openssl=1.0.2k&hsts=yes&profile=intermediate
+#Oldest compatible clients: Firefox 1, Chrome 1, IE 7, Opera 5, Safari 1, Windows XP IE8, Android 2.3, Java 7
+#
+   server {
+       listen       443 ssl http2 default_server;
+       listen       [::]:443 ssl http2 default_server;
+       server_name  {{ server_hostname }};
+       root         {{ nginx_root }};
+       index index.php index.html index.htm;
+
+       # certs sent to the client in SERVER HELLO are concatenated in ssl_certificate
+       # ssl_certificate /path/to/signed_cert_plus_intermediates;
+       # ssl_certificate_key /path/to/private_key;
+       ssl_certificate "/etc/pki/nginx/server.crt";
+       ssl_certificate_key "/etc/pki/nginx/private/server.key";
+       ssl_session_timeout 1d;
+       ssl_session_cache shared:SSL:50m;
+       ssl_session_tickets off;
+
+       # Diffie-Hellman parameter for DHE ciphersuites, recommended 2048 bits
+#!       ssl_dhparam /path/to/dhparam.pem;
+
+       # intermediate configuration. tweak to your needs.
+       ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+       ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS';
+       ssl_prefer_server_ciphers on;
+
+       # HSTS (ngx_http_headers_module is required) (15768000 seconds = 6 months)
+       add_header Strict-Transport-Security max-age=15768000;
+
+       # OCSP Stapling ---
+       # fetch OCSP records from URL in ssl_certificate and cache them
+       ssl_stapling on;
+       ssl_stapling_verify on;
+
+       ## verify chain of trust of OCSP response using Root CA and Intermediate certs
+#!       ssl_trusted_certificate /path/to/root_CA_cert_plus_intermediates;
+
+       #resolver <IP DNS resolver>;
+
+       # Load configuration files for the default server block.
+       include /etc/nginx/default.d/*.conf;
+
+       location / {
+            try_files $uri $uri/ =404;
+       }
+
+       location ~ [^/]\.php(/|$) {
+           fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+           if (!-f $document_root$fastcgi_script_name) {
+               return 404;
+           }
+           fastcgi_param HTTP_PROXY "";
+           fastcgi_pass unix:/var/run/php-fpm/php-fpm.sock;
+           fastcgi_index index.php;
+           include fastcgi_params;
+           fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+           fastcgi_param PATH_INFO       $fastcgi_path_info;
+           #fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+       }
+
+       error_page 404 /404.html;
+           location = /40x.html {
+       }
+
+       error_page 500 502 503 504 /50x.html;
+           location = /50x.html {
+       }
+   }
+
+}

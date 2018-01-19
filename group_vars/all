@@ -2,7 +2,13 @@
 #Variables
 
 #ansible managed hostname
-server_hostname: claw.linuxhomeserver.org
+server_hostname: claw.homelinuxserver.org
+#your website hostname
+website_hostname: claw.homelinuxserver.org
+
+#nginx root directory for requests
+#used for nginx config template and letsencrypt certificate issuing
+nginx_root: /usr/share/nginx/html
 
 #services enabled on firwalld
 firewalld_services:

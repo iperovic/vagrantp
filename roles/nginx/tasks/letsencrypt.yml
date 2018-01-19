@@ -1,0 +1,67 @@
+---
+#SSL
+#Issue a LetsEncrypt certificate
+
+# Create directories
+- name: Create TLS directories
+  file: path=/etc/pki/nginx/private mode=750 owner=root group=nginx state=directory
+#system_u:object_r:cert_t:s0
+
+#ansible SSL operations require PyOpenSSL>=0.15
+- name: Install pip
+  yum: name=python2-pip state=present
+#repo version too old, install with pip
+- name: Install PyOpenSSL
+  pip: name=pyopenssl state=present
+# Generate key
+- name: Generate certificate private key
+  openssl_privatekey: path=/etc/pki/nginx/private/server.key type=RSA size=2048 state=present
+# Generate CSR
+- name: Generate OpenSSL CSR
+  openssl_csr:
+    path: /etc/pki/nginx/server.csr
+    privatekey_path: /etc/pki/nginx/private/server.key
+    country_name: HR
+    organization_name: Home Linux Server
+    email_address: nginx@claw.homelinuxserver.org
+    common_name: claw.homelinuxserver.org
+    subject_alt_name: 'DNS:claw.homelinuxserver.org'
+    state: present
+
+- name: Generate account private key
+  openssl_privatekey: path=/etc/pki/nginx/private/le_account.key state=present
+
+#LetsEncrypt will use staging environment unless you update acme_directory option
+#current acme_directory=https://acme-v01.api.letsencrypt.org/directory
+#current agreement=https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
+#staging CA root https://letsencrypt.org/certs/fakelerootx1.pem
+#staging CA intermediate https://letsencrypt.org/certs/fakeleintermediatex1.pem
+
+#LetsEncrypt request
+- name: LetsEncrypt request certificate
+  letsencrypt: account_key=/etc/pki/nginx/private/le_account.key csr=/etc/pki/nginx/server.csr
+    dest=/etc/pki/nginx/server.crt agreement=https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
+  register: certificate_challenge
+
+#Print the response
+#- debug: msg="{{ certificate_challenge }}"
+
+#create dir for challenge
+- name: Create directories for challenge data
+  file: path="{{ nginx_root }}/.well-known/acme-challenge" state=directory
+  when: certificate_challenge|changed
+
+#Fulfill the challenge
+- name: Fulfill LetsEncrypt challenge
+  copy: dest=/usr/share/nginx/html/{{ certificate_challenge['challenge_data'][website_hostname]['http-01']['resource'] }}
+    content="{{ certificate_challenge['challenge_data'][website_hostname]['http-01']['resource_value'] }}"
+  when: certificate_challenge|changed
+
+#LetsEncrypt receive
+- name: LetsEncrypt receive certificate
+  letsencrypt: account_key=/etc/pki/nginx/private/le_account.key csr=/etc/pki/nginx/server.csr
+    dest=/etc/pki/nginx/server.crt data="{{ certificate_challenge }}"
+
+#clean up
+- name: Remove challenge data
+  file: path="{{ nginx_root }}/.well-known" state=absent

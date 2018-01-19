@@ -17,3 +17,8 @@
   copy: src=index.php dest=/usr/share/nginx/html/index.php mode=644
 #-rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 index.html
 #-rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 index.php
+- import_tasks: letsencrypt.yml
+
+- name: Copy nginx SSL configuration
+  template: src=nginx_ssl.conf.j2 dest=/etc/nginx/nginx.conf
+  notify: restart nginx

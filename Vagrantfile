@@ -4,7 +4,10 @@ Vagrant.configure("2") do |config|
 
   # Forward guest SSL port to host's external address and port
   # Networking configuration may be vagrant provider specific
+  #https
   config.vm.network "forwarded_port", guest: 443, host: 8443, host_ip: "0.0.0.0"
+  #http required only for LetsEncrypt challenge
+  config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "0.0.0.0"
 
   #configure VM
   config.vm.provider "libvirt" do |domain|

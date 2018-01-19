@@ -21,7 +21,7 @@
 #ntp
 # chrony is installed and configured by default
 
-#timezone 
+#timezone
 - name: set timezone
   timezone: name={{ timezone }}
 
@@ -33,9 +33,9 @@
 - name: Install extra tools
   yum: name={{ item }} state=installed
   with_items:
-   - setroubleshoot-server
-   - lsof
-   - nmap-ncat
+    - setroubleshoot-server
+    - lsof
+    - nmap-ncat
 
 #SELinux
 # enforcing by default, cheers Dan :-)
