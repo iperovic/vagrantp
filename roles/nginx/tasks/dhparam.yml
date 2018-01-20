@@ -1,0 +1,11 @@
+#generate parameters for Diffie–Hellman key exchange
+
+#Increase available entropy
+- import_tasks: haveged.yml
+
+#DH param size should be same as the key, no point in larger
+- name: Generate DH parameters
+  shell: openssl dhparam -out dhparam.pem 2048
+  args:
+    chdir: /etc/pki/nginx
+    creates: dhparam.pem

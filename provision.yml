@@ -1,5 +1,7 @@
 ---
 # Provisioner for Vagrant
+# This playbook is intended as one time provisioner. It is not optimized for
+# repeted use on same machine, but will work that way as well.
 - name: Provisioner playbook
   hosts: all
   # remote_user: vagrant

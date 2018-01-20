@@ -36,6 +36,7 @@
     - setroubleshoot-server
     - lsof
     - nmap-ncat
+    - bind-utils
 
 #SELinux
 # enforcing by default, cheers Dan :-)

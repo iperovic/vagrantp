@@ -66,7 +66,7 @@ http {
        ssl_session_tickets off;
 
        # Diffie-Hellman parameter for DHE ciphersuites, recommended 2048 bits
-#!       ssl_dhparam /path/to/dhparam.pem;
+       ssl_dhparam "/etc/pki/nginx/dhparam.pem";
 
        # intermediate configuration. tweak to your needs.
        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -82,9 +82,18 @@ http {
        ssl_stapling_verify on;
 
        ## verify chain of trust of OCSP response using Root CA and Intermediate certs
-#!       ssl_trusted_certificate /path/to/root_CA_cert_plus_intermediates;
+       #ssl_trusted_certificate /path/to/root_CA_cert_plus_intermediates;
+       ssl_trusted_certificate "/etc/pki/nginx/CA_root_plus_intermediate.crt";
 
        #resolver <IP DNS resolver>;
+
+       #Additional security related headers
+       add_header Content-Security-Policy "default-src https: data: 'unsafe-inline' 'unsafe-eval'" always;
+       add_header X-Frame-Options "SAMEORIGIN" always;
+       add_header X-Xss-Protection "1; mode=block" always;
+       add_header X-Content-Type-Options "nosniff" always;
+       add_header Referrer-Policy: "no-referrer-when-downgrade";
+       server_tokens off;
 
        # Load configuration files for the default server block.
        include /etc/nginx/default.d/*.conf;

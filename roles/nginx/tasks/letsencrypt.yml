@@ -1,11 +1,15 @@
 ---
 #SSL
 #Issue a LetsEncrypt certificate
+#2DO: Compare to openssl_certificate module with acme provider - may be simpler
 
 # Create directories
 - name: Create TLS directories
   file: path=/etc/pki/nginx/private mode=750 owner=root group=nginx state=directory
 #system_u:object_r:cert_t:s0
+
+#Increase available entropy
+- import_tasks: haveged.yml
 
 #ansible SSL operations require PyOpenSSL>=0.15
 - name: Install pip
@@ -31,6 +35,17 @@
 - name: Generate account private key
   openssl_privatekey: path=/etc/pki/nginx/private/le_account.key state=present
 
+#Add root and intermediate CA certificates
+- name: Copy CA certificates
+  copy: src="{{ item }}" dest=/etc/pki/nginx
+  with_items:
+    - "{{ ca_root_cert }}"
+    - "{{ ca_intermediate_cert }}"
+- name: Create ssl_trusted_certificate for nginx
+  shell: cat "{{ ca_intermediate_cert }}" "{{ ca_root_cert }}" > CA_root_plus_intermediate.crt
+  args:
+    chdir: /etc/pki/nginx
+    creates: CA_root_plus_intermediate.crt
 #LetsEncrypt will use staging environment unless you update acme_directory option
 #current acme_directory=https://acme-v01.api.letsencrypt.org/directory
 #current agreement=https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
@@ -46,6 +61,11 @@
 #Print the response
 #- debug: msg="{{ certificate_challenge }}"
 
+#Open port 80 to serve the challenge data
+- name: Open port 80
+  firewalld: service=http state=enabled;
+  when: certificate_challenge|changed
+  register: port_change
 #create dir for challenge
 - name: Create directories for challenge data
   file: path="{{ nginx_root }}/.well-known/acme-challenge" state=directory
@@ -61,7 +81,17 @@
 - name: LetsEncrypt receive certificate
   letsencrypt: account_key=/etc/pki/nginx/private/le_account.key csr=/etc/pki/nginx/server.csr
     dest=/etc/pki/nginx/server.crt data="{{ certificate_challenge }}"
+  register: certificate_receive
+
+- name: Add intermediate cert
+  shell: cat "{{ ca_intermediate_cert }}" >> server.crt
+  args:
+    chdir: /etc/pki/nginx
+  when: certificate_receive|changed
 
 #clean up
 - name: Remove challenge data
   file: path="{{ nginx_root }}/.well-known" state=absent
+- name: Close port 80
+  firewalld: service=http state=disabled
+  when: port_change|changed

@@ -36,6 +36,8 @@ Before using this solution, you should have vagrant with a working provider inst
 This solution was developed on bare metal host using Fedora 26 Workstation with qemu-kvm and libvirt.
 Ansible provisioner is written for CentOS 7 with packages from Base and EPEL repositories. Provisioner is based on [Ansible best practices repository](https://github.com/ansible/ansible-examples).
 
+Edit group_vars/all file to suit your needs before provisioning the box.
+
 Usage:
 ```shell
 $ vagrant init cnetos/7

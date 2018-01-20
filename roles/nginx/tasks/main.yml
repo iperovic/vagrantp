@@ -4,6 +4,10 @@
 - name: Install nginx package
   yum: name=nginx state=present
 
+#For use with provisioner, it's fine.
+#For general use - this step should be conditional - skipped if valid
+#certificate exists. Working http daemon listening on port 80 is needed
+#for LetsEncrypt http-01 challenge.
 - name: Copy nginx configuration
   template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf
 #-rw-r--r--. root root system_u:object_r:httpd_config_t:s0 nginx/nginx.conf
@@ -13,12 +17,16 @@
 - name: Enable nginx service
   service: name=nginx state=started enabled=yes
 
-- name: Add PHP test file
-  copy: src=index.php dest=/usr/share/nginx/html/index.php mode=644
-#-rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 index.html
-#-rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 index.php
+#Issue LetsEncrypt SSL certificate
 - import_tasks: letsencrypt.yml
+#Generate DH parameters
+- import_tasks: dhparam.yml
 
 - name: Copy nginx SSL configuration
   template: src=nginx_ssl.conf.j2 dest=/etc/nginx/nginx.conf
   notify: restart nginx
+
+- name: Add PHP test file
+  copy: src=index.php dest=/usr/share/nginx/html/index.php mode=644
+#-rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 index.html
+#-rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 index.php

@@ -1,0 +1,7 @@
+---
+#Available entropy in virtualized environments could be seriously low so we
+#can use some help
+- name: Install HAVEGE daemon
+  yum: name=haveged state=present
+- name: Enable haveged service
+  service: name=haveged state=started enabled=yes

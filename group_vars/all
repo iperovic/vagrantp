@@ -10,6 +10,12 @@ website_hostname: claw.homelinuxserver.org
 #used for nginx config template and letsencrypt certificate issuing
 nginx_root: /usr/share/nginx/html
 
+#Issuer root and intermediate CA certificates
+#user must place them in roles/nginx/files
+#current setting is for LetsEncrypt staging environment
+ca_root_cert: fakelerootx1.pem
+ca_intermediate_cert: fakeleintermediatex1.pem
+
 #services enabled on firwalld
 firewalld_services:
 #  - http
