@@ -35,24 +35,24 @@ http {
     # for more information.
     include /etc/nginx/conf.d/*.conf;
 
-    server {
-      listen 80 default_server;
-      listen [::]:80 default_server;
-
-      # Redirect all HTTP requests to HTTPS with a 301 Moved Permanently response.
-      return 301 https://$host$request_uri;
-    }
+    # server {
+    #   listen 80 default_server;
+    #   listen [::]:80 default_server;
+    #
+    #   # Redirect all HTTP requests to HTTPS with a 301 Moved Permanently response.
+    #   return 301 https://$host$request_uri;
+    # }
 
 # Settings for a TLS enabled server.
 #Based on:
-#nginx 1.10.3 | intermediate profile | OpenSSL 1.0.2k
-#https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=nginx-1.10.3&openssl=1.0.2k&hsts=yes&profile=intermediate
+#nginx 1.12.2 | intermediate profile | OpenSSL 1.0.2k | link
+#https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=nginx-1.12.2&openssl=1.0.2k&hsts=yes&profile=intermediate
 #Oldest compatible clients: Firefox 1, Chrome 1, IE 7, Opera 5, Safari 1, Windows XP IE8, Android 2.3, Java 7
 #
    server {
-       listen       443 ssl http2 default_server;
-       listen       [::]:443 ssl http2 default_server;
-       server_name  {{ server_hostname }};
+       listen       127.0.0.1:{{ nginx_ssl_port }} ssl http2 default_server;
+       listen       [::1]:{{ nginx_ssl_port }} ssl http2 default_server;
+       server_name  {{ website_hostname }};
        root         {{ nginx_root }};
        index index.php index.html index.htm;
 

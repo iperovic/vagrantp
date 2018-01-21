@@ -45,9 +45,11 @@ $ vagrant up
 ```
 
 Additional comments
-- HAProxy
-- nginx
-- php-fpm
+- HAProxy  
+- nginx  
+
+- php-fpm  
+  Unix socket was chosen for accepting FastCGI requests. Nginx and php-fpm are on the same server so we'll gain a little speed and security. Dynamic process manager control was chosen due to being a good balance between speed and resource consumption on a machine with multiple services. Static would be a better choice to get a maximum performance with increased .
 - Redis  
   Redis is installed with default configuration. Timer job is written purely in bash due to ambiguity of the assignment. And just for kicks.
 - MySQL  

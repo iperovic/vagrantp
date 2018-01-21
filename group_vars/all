@@ -9,6 +9,8 @@ website_hostname: claw.homelinuxserver.org
 #nginx root directory for requests
 #used for nginx config template and letsencrypt certificate issuing
 nginx_root: /usr/share/nginx/html
+nginx_ssl_port: 8443 #if haproxy is listening on 443, avoid conflict
+#nginex is listening on localhost only
 
 #Issuer root and intermediate CA certificates
 #user must place them in roles/nginx/files

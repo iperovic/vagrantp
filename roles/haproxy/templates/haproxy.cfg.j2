@@ -1,18 +1,57 @@
+#---------------------------------------------------------------------
+# Example configuration for a possible web application.  See the
+# full configuration options online.
+#
+#   http://haproxy.1wt.eu/download/1.4/doc/configuration.txt
+#
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
 global
-    log         127.0.0.1 local2 
+    # to have these messages end up in /var/log/haproxy.log you will
+    # need to:
+    #
+    # 1) configure syslog to accept network log events.  This is done
+    #    by adding the '-r' option to the SYSLOGD_OPTIONS in
+    #    /etc/sysconfig/syslog
+    #
+    # 2) configure local2 events to go to the /var/log/haproxy.log
+    #   file. A line like the following can be added to
+    #   /etc/sysconfig/syslog
+    #
+    #    local2.*                       /var/log/haproxy.log
+    #
+    log         127.0.0.1 local2
 
     chroot      /var/lib/haproxy
     pidfile     /var/run/haproxy.pid
     maxconn     4000
-    user        root
-    group       root
+    user        haproxy
+    group       haproxy
     daemon
 
     # turn on stats unix socket
-    stats socket /var/lib/haproxy/stats level admin
+   #stats socket /var/lib/haproxy/stats level admin
+    stats socket /var/lib/haproxy/stats
 
+#haproxy 1.5.18 | intermediate profile | OpenSSL 1.0.2k | link
+#https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=haproxy-1.5.18&openssl=1.0.2k&hsts=yes&profile=intermediate
+#Oldest compatible clients: Firefox 1, Chrome 1, IE 7, Opera 5, Safari 1, Windows XP IE8, Android 2.3, Java 7
+    #set default parameters to the intermediate configuration
+    tune.ssl.default-dh-param 2048
+    ssl-default-bind-ciphers ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS
+    ssl-default-bind-options no-sslv3 no-tls-tickets
+    ssl-default-server-ciphers ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS
+    ssl-default-server-options no-sslv3 no-tls-tickets
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
 defaults
-    mode                    {{ mode }}
+    mode                    http
     log                     global
     option                  httplog
     option                  dontlognull
@@ -29,11 +68,40 @@ defaults
     timeout check           10s
     maxconn                 3000
 
+#---------------------------------------------------------------------
+# main frontend which proxys to the backends
+#---------------------------------------------------------------------
+frontend  main
+#*:5000
+    # acl url_static       path_beg       -i /static /images /javascript /stylesheets
+    # acl url_static       path_end       -i .jpg .gif .png .css .js
+    #
+    # use_backend static          if url_static
+    default_backend             app
+#haproxy 1.5.18 | intermediate profile | OpenSSL 1.0.2k | link
+#https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=haproxy-1.5.18&openssl=1.0.2k&hsts=yes&profile=intermediate
+#Oldest compatible clients: Firefox 1, Chrome 1, IE 7, Opera 5, Safari 1, Windows XP IE8, Android 2.3, Java 7
+    mode    http
+    bind    :443 ssl crt /etc/pki/nginx/haproxy.pem
+    bind    :80
+    redirect scheme https code 301 if !{ ssl_fc }
+
+    # HSTS (15768000 seconds = 6 months)
+    http-response set-header Strict-Transport-Security max-age=15768000
+
+#---------------------------------------------------------------------
+# static backend for serving up images, stylesheets and such
+#---------------------------------------------------------------------
+# backend static
+#     balance     roundrobin
+#     server      static 127.0.0.1:4331 check
+
+#---------------------------------------------------------------------
+# round robin balancing between the various backends
+#---------------------------------------------------------------------
 backend app
-    {% for host in groups.lbservers %}
-    	listen {{ daemonname }} 0.0.0.0:{{ listenport }}
-    {% endfor %}
-    balance     {{ balance }}
-    {% for host in groups.webservers %}
-        server {{ host }} {{ hostvars[host]['ansible_' + iface].ipv4.address }}:{{ httpd_port }}
-    {% endfor %}
+    balance     roundrobin
+    server  app1 127.0.0.1:8443 ssl verify required ca-file /etc/pki/nginx/CA_root_plus_intermediate.crt
+    # server  app2 127.0.0.1:5002 check
+    # server  app3 127.0.0.1:5003 check
+    # server  app4 127.0.0.1:5004 check
