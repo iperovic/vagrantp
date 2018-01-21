@@ -25,5 +25,5 @@
   - FLUSH PRIVILEGES;
   listen: mysql_secure_installation
 - name: Remove temporary option file
-  file: path=/root/my.cnf state=absent
+  file: path=/root/.my.cnf state=absent
   listen: mysql_secure_installation
