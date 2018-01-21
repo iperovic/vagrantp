@@ -38,7 +38,7 @@ http {
     server {
         listen       80 default_server;
         listen       [::]:80 default_server;
-        server_name  {{ server_hostname }};
+        server_name  {{ website_hostname }};
         root         {{ nginx_root }};
         index index.php index.html index.htm;
 

@@ -30,6 +30,32 @@ http {
     include             /etc/nginx/mime.types;
     default_type        application/octet-stream;
 
+### FastCGI Microcaching
+### More info at:
+### https://www.lucasoft.info/topics/blog/2/phenomenal-performance-php-nginx-microcaching
+### https://www.digitalocean.com/community/tutorials/how-to-setup-fastcgi-caching-with-nginx-on-your-vps
+    ## set cache dir, hierarchy, max key size and total size
+    fastcgi_cache_path /dev/shm/microcache levels=1:2 keys_zone=microcache:5M max_size=200M inactive=20m;
+
+    ## set cache log location, so you can evaluate hits
+    # log_format cache  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                   '$status $upstream_cache_status $body_bytes_sent "$http_referer" '
+    #                   '"$http_user_agent" "$http_x_forwarded_for"';
+
+    ## Set a cache_uid variable for authenticated users.
+    # map $http_cookie $cache_uid {
+    #   default nil;
+    #   ~SESS[[:alnum:]]+=(?<session_id>[[:alnum:]]+) $session_id;
+    # }
+
+    ## mapping cache to request method
+    map $request_method $no_cache {
+      default 1; # by default do not cache
+      HEAD 0; # cache HEAD requests
+      GET 0; # cache GET requests
+    }
+
+
     # Load modular configuration files from the /etc/nginx/conf.d directory.
     # See http://nginx.org/en/docs/ngx_core_module.html#include
     # for more information.
@@ -88,6 +114,7 @@ http {
        #resolver <IP DNS resolver>;
 
        #Additional security related headers
+       ### https://scotthelme.co.uk/hardening-your-http-response-headers/
        add_header Content-Security-Policy "default-src https: data: 'unsafe-inline' 'unsafe-eval'" always;
        add_header X-Frame-Options "SAMEORIGIN" always;
        add_header X-Xss-Protection "1; mode=block" always;
@@ -102,6 +129,10 @@ http {
             try_files $uri $uri/ =404;
        }
 
+       location ~ /\. {
+          deny all;
+       }
+
        location ~ [^/]\.php(/|$) {
            fastcgi_split_path_info ^(.+?\.php)(/.*)$;
            if (!-f $document_root$fastcgi_script_name) {
@@ -114,6 +145,50 @@ http {
            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
            fastcgi_param PATH_INFO       $fastcgi_path_info;
            #fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+
+           ### FastCGI Microcaching
+           # Setup var defaults
+           set $no_cache "";
+           # If non GET/HEAD, don't cache & mark user as uncacheable for 1 second via cookie
+           if ($request_method !~ ^(GET|HEAD)$) {
+               set $no_cache "1";
+           }
+           # Drop no cache cookie if need be
+           if ($no_cache = "1") {
+               add_header Set-Cookie "_mcnc=1; Max-Age=2; Path=/";
+               add_header X-Microcachable "0";
+           }
+           # Bypass cache if no-cache cookie is set
+           if ($http_cookie ~* "_mcnc") {
+               set $no_cache "1";
+           }
+### Don't cache admin area & logged-in users
+           #Don't cache the following URLs
+           if ($request_uri ~* "/(administrator/|login.php)")
+           {
+               set $no_cache 1;
+           }
+           #Don't cache if there is a cookie called PHPSESSID
+           if ($http_cookie = "PHPSESSID")
+           {
+               set $no_cache 1;
+           }
+### ... or just tailor to your needs
+           if ($http_cookie ~* "yourcms_no_cache|yourcms_logged_in")
+           {
+               set $no_cache 1;
+           }
+
+           # Bypass cache if flag is set
+           fastcgi_no_cache $no_cache;
+           fastcgi_cache_bypass $no_cache;
+           fastcgi_cache microcache;
+           fastcgi_cache_key $scheme$host$request_uri$request_method;
+           fastcgi_cache_valid 200 301 302 10m;
+           fastcgi_cache_use_stale updating error timeout invalid_header http_500;
+           fastcgi_pass_header Set-Cookie;
+           fastcgi_pass_header Cookie;
+           fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
        }
 
        error_page 404 /404.html;
