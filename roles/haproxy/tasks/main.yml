@@ -4,31 +4,7 @@
 - name: Download and install haproxy
   yum: name=haproxy state=present
 
-#prepare certificate bundle
-- name: Create certificate bundle for haproxy
-  shell: cat private/server.key server.crt dhparam.pem >> haproxy.pem
-  args:
-    chdir: /etc/pki/nginx
-    creates: haproxy.pem
-
-- name: Set permissions/ownership of haproxy bundle
-  file: path=/etc/pki/nginx/haproxy.pem mode=600 owner=root
-
-- name: Prepare issuer file
-  shell: cat {{ ca_intermediate_cert }} > haproxy.pem.issuer
-  args:
-    chdir: /etc/pki/nginx
-    creates: haproxy.pem.issuer
-
-#not verifying OCSP signer on staging
-- name: Collect OCSP response
-  shell: >
-    openssl ocsp -issuer haproxy.pem.issuer -cert haproxy.pem
-    -url http://ocsp.stg-int-x1.letsencrypt.org -header "Host"
-    "ocsp.stg-int-x1.letsencrypt.org" -noverify -respout haproxy.pem.ocsp
-  args:
-    chdir: /etc/pki/nginx
-    creates: haproxy.pem.ocsp
+- import_tasks: preparecert.yml
 
 - name: Create haproxy configuration
   template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg

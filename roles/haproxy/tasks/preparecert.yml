@@ -1,0 +1,31 @@
+---
+#Prepare allready issued certificates for use with HAProxy
+#2DO: make it more generic so role could be reusable on its own
+#create directory
+- name: Create TLS directories
+  file: path=/etc/pki/haproxy mode=750 owner=root group=haproxy state=directory
+#prepare certificate bundle
+- name: Create certificate bundle for haproxy
+  shell: cat private/server.key server.crt dhparam.pem >../haproxy/haproxy.pem
+  args:
+    chdir: /etc/pki/nginx
+    creates: ../haproxy/haproxy.pem
+
+- name: Set permissions/ownership of haproxy bundle
+  file: path=/etc/pki/haproxy/haproxy.pem mode=600 owner=root
+
+- name: Prepare issuer file
+  shell: cat {{ ca_intermediate_cert }} > ../haproxy/haproxy.pem.issuer
+  args:
+    chdir: /etc/pki/nginx
+    creates: ../haproxy/haproxy.pem.issuer
+
+#not verifying OCSP signer on staging
+- name: Collect OCSP response
+  shell: >
+    openssl ocsp -issuer haproxy.pem.issuer -cert haproxy.pem
+    -url http://ocsp.stg-int-x1.letsencrypt.org -header "Host"
+    "ocsp.stg-int-x1.letsencrypt.org" -noverify -respout haproxy.pem.ocsp
+  args:
+    chdir: /etc/pki/haproxy
+    creates: haproxy.pem.ocsp
