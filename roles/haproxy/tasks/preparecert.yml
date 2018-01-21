@@ -4,7 +4,9 @@
 #create directory
 - name: Create TLS directories
   file: path=/etc/pki/haproxy mode=750 owner=root group=haproxy state=directory
-#prepare certificate bundle
+#Prepare certificate bundle, intermediate is allready bundled with cert.
+#It seems to work fine in this order. Considering different orders alleged by
+#different sources, I guess the order doesn't matter.
 - name: Create certificate bundle for haproxy
   shell: cat private/server.key server.crt dhparam.pem >../haproxy/haproxy.pem
   args:
@@ -21,6 +23,11 @@
     creates: ../haproxy/haproxy.pem.issuer
 
 #not verifying OCSP signer on staging
+#you should refresh this periodicaly and reload service or send info to socket
+# if openssl >=1.1.0 you can leave out the -header switch or use format
+#host=fqdn instead of host fqdn.
+#2DO - fix with checking target openssl version
+#2DO - extract url/hostname from existing certificate
 - name: Collect OCSP response
   shell: >
     openssl ocsp -issuer haproxy.pem.issuer -cert haproxy.pem
