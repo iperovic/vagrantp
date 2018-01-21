@@ -6,6 +6,11 @@ server_hostname: claw.homelinuxserver.org
 #your website hostname
 website_hostname: claw.homelinuxserver.org
 
+#csr data
+csr_country_name: HR
+csr_organization_name: Home Linux Server
+csr_email_address: nginex@claw.homelinuxserver.org
+
 #nginx root directory for requests
 #used for nginx config template and letsencrypt certificate issuing
 nginx_root: /usr/share/nginx/html

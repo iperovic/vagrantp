@@ -25,13 +25,14 @@
   openssl_csr:
     path: /etc/pki/nginx/server.csr
     privatekey_path: /etc/pki/nginx/private/server.key
-    country_name: HR
-    organization_name: Home Linux Server
-    email_address: nginx@claw.homelinuxserver.org
-    common_name: claw.homelinuxserver.org
-    subject_alt_name: 'DNS:claw.homelinuxserver.org'
+    country_name: "{{ csr_country_name }}"
+    organization_name: "{{ csr_organization_name }}"
+    email_address: "{{ csr_email_address }}"
+    common_name: "{{ website_hostname }}"
+    subject_alt_name: "DNS:{{ website_hostname }}"
     state: present
 
+#2DO - add option to use existing key/account - this always generates a new one
 - name: Generate account private key
   openssl_privatekey: path=/etc/pki/nginx/private/le_account.key state=present
 
@@ -63,7 +64,7 @@
 
 #Open port 80 to serve the challenge data
 - name: Open port 80
-  firewalld: service=http state=enabled;
+  firewalld: service=http state=enabled
   when: certificate_challenge|changed
   register: port_change
 #create dir for challenge
