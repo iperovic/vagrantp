@@ -19,13 +19,15 @@
     - php-pear
     # - php-mcrypt
 
-- name: Add php-fpm configuration
-  copy: src=www.conf dest=/etc/php-fpm.d/www.conf mode=644
-#-rw-r--r--. root root system_u:object_r:etc_t:s0       php-fpm.d/www.conf
-# setype=foo_t
-  notify: restart php-fpm
-
-
 #start & enable service
 - name: Start the php-fpm service
   service: name=php-fpm state=started enabled=yes
+
+- name: Add php-fpm pool configuration
+  copy: src=www.conf dest=/etc/php-fpm.d/www.conf mode=644
+  notify: restart php-fpm
+- name: Add php-fpm global configuration
+  copy: src=php-fpm.conf dest=/etc/php-fpm.conf mode=644
+  notify: restart php-fpm
+#-rw-r--r--. root root system_u:object_r:etc_t:s0       php-fpm.d/www.conf
+# setype=foo_t
