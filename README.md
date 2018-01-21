@@ -40,12 +40,16 @@ Edit group_vars/all file to suit your needs before provisioning the box.
 
 Usage:
 ```shell
+$ git clone https://github.com/iperovic/vagrantp
+$ cd vagrantp
+$ vi group_vars/all
 $ vagrant init cnetos/7
 $ vagrant up
 ```
 
 Additional comments
 - HAProxy  
+
 - nginx  
 
 - php-fpm  
