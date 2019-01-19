@@ -45,7 +45,7 @@ Usage:
 $ git clone https://github.com/iperovic/vagrantp
 $ cd vagrantp
 $ vi group_vars/all
-$ vagrant init cnetos/7
+$ vagrant init centos/7
 $ vagrant up
 ```
 
